@@ -1,6 +1,6 @@
 {
   "name": "env-typed-guard",
-  "version": "1.0.3",
+  "version": "1.0.4",
   "description": "Type-safe environment variable parsing with full TypeScript IntelliSense support",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
