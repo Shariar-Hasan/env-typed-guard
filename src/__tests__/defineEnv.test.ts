@@ -101,9 +101,10 @@ describe('defineEnv', () => {
         });
     });
 
-    describe('enum handling', () => {        it('should handle enum values', () => {
+    describe('enum handling', () => {
+        it('should handle enum values', () => {
             process.env.NODE_ENV = 'development';
-            
+
             const schema: EnvSchemaType = {
                 NODE_ENV: {
                     type: 'enum',
@@ -118,7 +119,7 @@ describe('defineEnv', () => {
 
         it('should throw error for invalid enum values', () => {
             process.env.NODE_ENV = 'invalid';
-            
+
             const schema: EnvSchemaType = {
                 NODE_ENV: {
                     type: 'enum',
@@ -246,9 +247,9 @@ describe('defineEnv', () => {
             expect(() => {
                 defineEnv(schema, { throw: false });
             }).not.toThrow();
-        });        it('should respect debugMode option', () => {
+        }); it('should respect debugMode option', () => {
             process.env.TEST_VAR = 'test';
-            
+
             const schema: EnvSchemaType = {
                 TEST_VAR: {
                     type: 'string',

@@ -95,7 +95,7 @@ export default function defineEnv<T extends EnvSchemaType>(
 
                     final[key] = rawValue;
                     logEntries.push(`${key}=${rawValue}`);
-                    
+
                     // Validate if validator is provided
                     if (schemaValue.validate) {
                         const validationResult = schemaValue.validate(rawValue);
@@ -108,7 +108,7 @@ export default function defineEnv<T extends EnvSchemaType>(
                             continue;
                         }
                     }
-                    
+
                     continue;
                 }
             }
