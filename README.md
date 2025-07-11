@@ -1,4 +1,4 @@
-# env-guard
+# env-typed-guard
 
 A TypeScript-first library for type-safe environment variable parsing and validation with full IntelliSense support.
 
@@ -15,13 +15,13 @@ A TypeScript-first library for type-safe environment variable parsing and valida
 ## Installation
 
 ```bash
-npm install env-guard
+npm install env-typed-guard
 ```
 
 ## Quick Start
 
 ```typescript
-import defineEnv from 'env-guard';
+import defineEnv from 'env-typed-guard';
 
 // Define your environment schema
 const env = defineEnv({
