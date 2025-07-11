@@ -1,7 +1,7 @@
 {
   "name": "env-guard",
   "version": "1.0.0",
-  "description": "Type-safe environment variable handling for Node.js applications",
+  "description": "Type-safe environment variable parsing with full TypeScript IntelliSense support",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "scripts": {
@@ -19,7 +19,11 @@
     "typescript",
     "type-safe",
     "validation",
-    "configuration"
+    "configuration",
+    "intellisense",
+    "autocomplete",
+    "schema",
+    "defineEnv"
   ],
   "author": "Your Name <your.email@example.com>",
   "license": "MIT",

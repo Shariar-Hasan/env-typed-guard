@@ -1,196 +1,144 @@
-# typed-env
+# env-guard
 
-A TypeScript-first library for type-safe environment variable parsing and validation.
+A TypeScript-first library for type-safe environment variable parsing and validation with full IntelliSense support.
 
 ## Features
 
-- 🔒 **Type-safe**: Full TypeScript support with proper type inference
-- 📋 **Schema-based**: Define your environment variables with a clear schema
-- ✅ **Validation**: Built-in validators for common use cases
-- 🔧 **Extensible**: Easy to extend with custom validators
-- 🎯 **Zero dependencies**: Lightweight and focused
-- 📝 **Great DX**: Helpful error messages and IntelliSense support
+- 🔒 **Type-safe**: Full TypeScript support with automatic type inference
+- 📋 **Schema-based**: Define your environment variables with a clear, simple schema
+- ✅ **Validation**: Built-in and custom validation functions
+- 🎯 **IntelliSense**: Get autocomplete suggestions for your environment variables
+- 🔧 **Flexible**: Support for string, number, boolean, and enum types
+- 📝 **Error handling**: Comprehensive error messages and configurable behavior
+- 🚀 **Zero dependencies**: Lightweight and focused
 
 ## Installation
 
 ```bash
-npm install typed-env
+npm install env-guard
 ```
 
 ## Quick Start
 
 ```typescript
-import { parseEnv, validators } from 'typed-env';
+import defineEnv from 'env-guard';
 
 // Define your environment schema
-const schema = {
-  DATABASE_URL: {
-    type: 'string' as const,
-    required: true,
-    validate: validators.url
-  },
-  
+const env = defineEnv({
   PORT: {
     type: 'number' as const,
-    default: 3000,
-    validate: validators.range(1, 65535)
+    defaultValue: 3000
   },
   
   NODE_ENV: {
-    type: 'string' as const,
-    default: 'development',
-    validate: validators.oneOf(['development', 'production', 'test'])
+    type: 'enum' as const,
+    validValues: ['development', 'production', 'test'] as const,
+    defaultValue: 'development' as const
   },
   
-  ENABLE_LOGGING: {
+  DATABASE_URL: {
+    type: 'string' as const
+    // No defaultValue = required environment variable
+  },
+  
+  DEBUG: {
     type: 'boolean' as const,
-    default: true
+    defaultValue: false
   }
-};
+});
 
-// Parse and validate
-const env = parseEnv(schema);
-
-// Use with full type safety
+// Use with full type safety and IntelliSense
 console.log(`Server running on port ${env.PORT}`);
-console.log(`Database: ${env.DATABASE_URL}`);
-console.log(`Logging enabled: ${env.ENABLE_LOGGING}`);
+console.log(`Environment: ${env.NODE_ENV}`);
+console.log(`Debug mode: ${env.DEBUG}`);
 ```
 
 ## API Reference
 
-### Types
+### `defineEnv(schema, config?)`
 
-#### `EnvVariableConfig`
+The main function that parses and validates environment variables.
+
+#### Parameters
+
+- `schema`: Object defining your environment variables
+- `config`: Optional configuration object
+
+#### Schema Types
+
+Each environment variable in your schema can be defined as:
 
 ```typescript
-interface EnvVariableConfig {
-  type: 'string' | 'number' | 'boolean' | 'json';
-  required?: boolean;
-  default?: any;
-  description?: string;
-  validate?: (value: any) => boolean | string;
+{
+  type: 'string' | 'number' | 'boolean' | 'enum';
+  defaultValue?: any;           // Optional default value
+  validate?: (value) => boolean | string;  // Optional custom validation
 }
 ```
 
-#### `EnvSchema`
+#### Configuration Options
 
 ```typescript
-interface EnvSchema {
-  [key: string]: EnvVariableConfig;
+{
+  debugMode?: boolean;    // Enable debug logging
+  log?: 'error' | 'warn' | 'info' | 'debug';  // Log level
+  throw?: boolean;        // Whether to throw on validation errors (default: true)
 }
 ```
 
-### Core Functions
+## Type Support
 
-#### `parseEnv(schema, env?)`
-
-Parse environment variables according to a schema.
-
+### String Type
 ```typescript
-const env = parseEnv({
-  API_KEY: { type: 'string', required: true },
-  PORT: { type: 'number', default: 3000 }
+const env = defineEnv({
+  API_KEY: {
+    type: 'string' as const,
+    defaultValue: 'dev-key'
+  }
 });
 ```
 
-#### `createEnv(schema, env?)`
-
-Create a `TypedEnv` instance for more advanced usage.
-
+### Number Type
 ```typescript
-const typedEnv = createEnv(schema);
-const env = typedEnv.parse();
+const env = defineEnv({
+  PORT: {
+    type: 'number' as const,
+    defaultValue: 3000
+  }
+});
+// Environment variable: PORT=8080 → parsed as number 8080
 ```
 
-### TypedEnv Class
-
-#### Methods
-
-- `parse()`: Parse and validate all environment variables
-- `get<T>(key)`: Get a single environment variable with type safety
-- `has(key)`: Check if an environment variable exists
-- `extend(schema)`: Create a new instance with extended schema
-- `raw()`: Get raw environment variables
-
-### Built-in Validators
-
-#### `validators.nonEmpty`
-Validates that a string is not empty.
-
+### Boolean Type
 ```typescript
-{
-  type: 'string',
-  validate: validators.nonEmpty
-}
+const env = defineEnv({
+  DEBUG: {
+    type: 'boolean' as const,
+    defaultValue: false
+  }
+});
+// Environment variable: DEBUG=true → parsed as boolean true
+// Accepts: 'true', 'false', '1', '0' (case insensitive)
 ```
 
-#### `validators.range(min, max)`
-Validates that a number is within a specified range.
-
+### Enum Type
 ```typescript
-{
-  type: 'number',
-  validate: validators.range(1, 100)
-}
-```
-
-#### `validators.positive`
-Validates that a number is positive.
-
-```typescript
-{
-  type: 'number',
-  validate: validators.positive
-}
-```
-
-#### `validators.pattern(regex)`
-Validates that a string matches a regular expression.
-
-```typescript
-{
-  type: 'string',
-  validate: validators.pattern(/^[A-Z]+$/)
-}
-```
-
-#### `validators.oneOf(options)`
-Validates that a value is one of the specified options.
-
-```typescript
-{
-  type: 'string',
-  validate: validators.oneOf(['dev', 'prod', 'test'])
-}
-```
-
-#### `validators.url`
-Validates URL format.
-
-```typescript
-{
-  type: 'string',
-  validate: validators.url
-}
-```
-
-#### `validators.email`
-Validates email format.
-
-```typescript
-{
-  type: 'string',
-  validate: validators.email
-}
+const env = defineEnv({
+  LOG_LEVEL: {
+    type: 'enum' as const,
+    validValues: ['debug', 'info', 'warn', 'error'] as const,
+    defaultValue: 'info' as const
+  }
+});
+// env.LOG_LEVEL has type: 'debug' | 'info' | 'warn' | 'error'
 ```
 
 ## Advanced Usage
 
-### Custom Validators
+### Custom Validation
 
 ```typescript
-const schema = {
+const env = defineEnv({
   PASSWORD: {
     type: 'string' as const,
     validate: (value: string) => {
@@ -198,96 +146,164 @@ const schema = {
         return 'Password must be at least 8 characters';
       }
       if (!/[A-Z]/.test(value)) {
-        return 'Password must contain uppercase letter';
+        return 'Password must contain at least one uppercase letter';
+      }
+      return true;
+    }
+  },
+  
+  PORT: {
+    type: 'number' as const,
+    defaultValue: 3000,
+    validate: (value: number) => {
+      if (value < 1000 || value > 65535) {
+        return 'Port must be between 1000 and 65535';
       }
       return true;
     }
   }
-};
+});
+```
+
+### Required vs Optional Variables
+
+```typescript
+const env = defineEnv({
+  // Required (no defaultValue)
+  DATABASE_URL: {
+    type: 'string' as const
+  },
+  
+  // Optional (has defaultValue)
+  CACHE_TTL: {
+    type: 'number' as const,
+    defaultValue: 300
+  }
+});
 ```
 
 ### Environment-specific Configuration
 
 ```typescript
-const createSchema = (isDevelopment: boolean) => ({
-  DATABASE_URL: {
-    type: 'string' as const,
-    required: !isDevelopment,
-    default: isDevelopment ? 'sqlite://dev.db' : undefined
+const env = defineEnv({
+  NODE_ENV: {
+    type: 'enum' as const,
+    validValues: ['development', 'production', 'test'] as const,
+    defaultValue: 'development' as const
   },
   
-  LOG_LEVEL: {
+  DATABASE_URL: {
     type: 'string' as const,
-    default: isDevelopment ? 'debug' : 'info',
-    validate: validators.oneOf(['debug', 'info', 'warn', 'error'])
+    defaultValue: process.env.NODE_ENV === 'development' 
+      ? 'sqlite://dev.db' 
+      : undefined // Required in production
   }
 });
-
-const isDev = process.env.NODE_ENV === 'development';
-const env = parseEnv(createSchema(isDev));
 ```
 
-### Schema Extension
-
-```typescript
-const baseSchema = {
-  PORT: { type: 'number' as const, default: 3000 }
-};
-
-const extendedSchema = {
-  REDIS_URL: { type: 'string' as const, required: true }
-};
-
-const typedEnv = createEnv(baseSchema).extend(extendedSchema);
-const env = typedEnv.parse();
-```
-
-### JSON Configuration
-
-```typescript
-const schema = {
-  DATABASE_CONFIG: {
-    type: 'json' as const,
-    default: { host: 'localhost', port: 5432 }
-  }
-};
-
-const env = parseEnv(schema);
-// env.DATABASE_CONFIG is properly typed as the parsed JSON object
-```
-
-## Error Handling
-
-The library provides detailed error messages for validation failures:
+### Error Handling
 
 ```typescript
 try {
-  const env = parseEnv(schema);
+  const env = defineEnv({
+    REQUIRED_VAR: {
+      type: 'string' as const
+    }
+  });
 } catch (error) {
-  if (error instanceof EnvParseError) {
-    console.error('Environment validation failed:', error.message);
-    // Handle specific validation errors
-  }
+  console.error('Environment validation failed:', error.message);
+  process.exit(1);
 }
+
+// Or disable throwing
+const env = defineEnv({
+  REQUIRED_VAR: {
+    type: 'string' as const
+  }
+}, {
+  throw: false,
+  log: 'warn'
+});
+```
+
+### Debug Mode
+
+```typescript
+const env = defineEnv({
+  PORT: {
+    type: 'number' as const,
+    defaultValue: 3000
+  }
+}, {
+  debugMode: true
+});
+
+// Output:
+// Environment variables:
+//   PORT=3000 (using default)
 ```
 
 ## Best Practices
 
-1. **Define schemas at the module level** for reusability
-2. **Use TypeScript const assertions** for better type inference
-3. **Provide meaningful descriptions** for documentation
-4. **Use appropriate defaults** for optional variables
-5. **Group related variables** in logical schemas
-6. **Validate early** in your application startup
+1. **Use `as const` for type literals** to get better type inference:
+   ```typescript
+   type: 'string' as const  // ✅ Good
+   type: 'string'           // ❌ Less precise typing
+   ```
 
-## Examples
+2. **Group related variables** in logical schemas:
+   ```typescript
+   const dbEnv = defineEnv({
+     DATABASE_URL: { type: 'string' as const },
+     DATABASE_POOL_SIZE: { type: 'number' as const, defaultValue: 10 }
+   });
+   ```
 
-See the `examples/` directory for more comprehensive examples:
+3. **Validate early** in your application startup:
+   ```typescript
+   // At the top of your main file
+   const env = defineEnv(schema);
+   ```
 
-- Basic usage with common patterns
-- Advanced validation scenarios
-- Environment-specific configurations
-- Custom validator implementations
+4. **Use meaningful validation messages**:
+   ```typescript
+   validate: (value) => value > 0 || 'Must be a positive number'
+   ```
+
+5. **Provide sensible defaults** for optional variables:
+   ```typescript
+   TIMEOUT: {
+     type: 'number' as const,
+     defaultValue: 5000  // 5 seconds
+   }
+   ```
+
+## Environment Variable Examples
+
+Set these in your shell or `.env` file:
+
+```bash
+# String
+DATABASE_URL=postgresql://user:pass@localhost:5432/db
+
+# Number
+PORT=8080
+
+# Boolean
+DEBUG=true
+
+# Enum
+NODE_ENV=production
+```
+
+## TypeScript Integration
+
+The library provides full TypeScript support with:
+
+- **Type inference**: Automatically infers types from your schema
+- **IntelliSense**: Autocomplete for environment variable names
+- **Type checking**: Compile-time validation of usage
+- **Error messages**: Clear TypeScript errors for invalid usage
 
 ## Contributing
 
