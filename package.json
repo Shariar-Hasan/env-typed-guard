@@ -49,5 +49,8 @@
   "bugs": {
     "url": "https://github.com/Shariar-Hasan/env-typed-guard/issues"
   },
-  "homepage": "https://github.com/Shariar-Hasan/env-typed-guard#readme"
+  "homepage": "https://github.com/Shariar-Hasan/env-typed-guard#readme",
+  "dependencies": {
+    "dotenv": "^17.2.0"
+  }
 }

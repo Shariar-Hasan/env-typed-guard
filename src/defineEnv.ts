@@ -1,4 +1,6 @@
 import { EnvConfigType, EnvSchemaType, InferEnvType } from "./types";
+import dotenv from 'dotenv';
+dotenv.config();
 
 // Node.js process global
 declare const process: {
@@ -48,7 +50,20 @@ function parseValue(value: string, type: string, variableName: string, config: E
 /**
  * Log function that respects the config settings
  */
-const log = (message: string, config: EnvConfigType) => console[config.log || 'warn'](message);
+const log = (message: string, config: EnvConfigType = {}) => {
+    const level = config.log || 'warn';
+    const color = {
+        error: '\x1b[31m', // red
+        warn: '\x1b[33m',  // yellow
+        info: '\x1b[36m',  // cyan
+        debug: '\x1b[90m', // gray
+    }[level];
+    const reset = '\x1b[0m';
+
+    console.log(`${color}${message}${reset}`);
+};
+
+
 /**
  * Define environment variables based on the provided schema and configuration.
  * This function reads environment variables, validates them against the schema,
