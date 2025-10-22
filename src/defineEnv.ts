@@ -162,8 +162,10 @@ export default function defineEnv<T extends EnvSchemaType>(
     // Optional debug logging
     if (config.debugMode) {
         logger.title().log();
-        logger.blue("Environment variables:").log();
-        logEntries.map(entry => logger.cyan(entry).log())
+        if (logEntries.length) {
+            logger.blue("Environment variables:").log();
+            logEntries.map(entry => logger.cyan(entry).log())
+        }
         logger.newLine(1).log();
     }
 
