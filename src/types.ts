@@ -3,21 +3,27 @@
  * New type definitions for defineEnv function
  */
 export type EnvType = 'string' | 'number' | 'boolean' | 'enum';
-export type EnvSchemaValueType = {
-  type: Omit<EnvType, 'enum'>;
+export type ErrorType = "missing" | "invalid" | "validation" | "unknown";
+
+type BaseEnvSchema = {
   defaultValue?: string | number | boolean;
   validate?: (value: any) => boolean | string;
-} | {
+};
+
+type EnvEnumSchema = BaseEnvSchema & {
   type: 'enum';
-  defaultValue?: string | number;
   validValues: (string | number)[];
-  validate?: (value: any) => boolean | string;
-}
+};
+
+type EnvNonEnumSchema = BaseEnvSchema & {
+  type: Exclude<EnvType, 'enum'>;
+};
+
+export type EnvSchemaValueType = EnvEnumSchema | EnvNonEnumSchema;
 
 export type EnvSchemaType = Record<string, EnvSchemaValueType>;
 export type EnvConfigType = {
   debugMode?: boolean;
-  log?: 'error' | 'warn' | 'info' | 'debug';
   throw?: boolean;
 };
 
