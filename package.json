@@ -1,6 +1,6 @@
 {
   "name": "env-typed-guard",
-  "version": "1.0.4",
+  "version": "1.1.0",
   "description": "Type-safe environment variable parsing with full TypeScript IntelliSense support",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
@@ -49,5 +49,8 @@
   "bugs": {
     "url": "https://github.com/Shariar-Hasan/env-typed-guard/issues"
   },
-  "homepage": "https://github.com/Shariar-Hasan/env-typed-guard#readme"
+  "homepage": "https://github.com/Shariar-Hasan/env-typed-guard#readme",
+  "dependencies": {
+    "dotenv": "^17.2.0"
+  }
 }

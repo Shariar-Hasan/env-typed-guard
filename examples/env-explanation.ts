@@ -22,7 +22,7 @@ const schema = {
 
     // JSON type - environment variable: TEST_JSON='{"key":"value","count":123}'
     TEST_JSON: {
-        type: 'json' as const,
+        type: 'string' as const,
         default: { message: 'This is a test' } // Default used if TEST_JSON is not set
     }
 };

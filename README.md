@@ -1,16 +1,23 @@
+
 # env-typed-guard
 
-A TypeScript-first library for type-safe environment variable parsing and validation with full IntelliSense support.
+A **TypeScript-first library** for **type-safe environment variable parsing and validation** with full IntelliSense and optional logging.
+
+---
 
 ## Features
 
-- 🔒 **Type-safe**: Full TypeScript support with automatic type inference
-- 📋 **Schema-based**: Define your environment variables with a clear, simple schema
-- ✅ **Validation**: Built-in and custom validation functions
-- 🎯 **IntelliSense**: Get autocomplete suggestions for your environment variables
-- 🔧 **Flexible**: Support for string, number, boolean, and enum types
-- 📝 **Error handling**: Comprehensive error messages and configurable behavior
-- 🚀 **Zero dependencies**: Lightweight and focused
+* 🔒 **Type-safe**: Full TypeScript support with automatic type inference
+* 📋 **Schema-based**: Define environment variables with a clear schema
+* ✅ **Validation**: Built-in and custom validators
+* 🎯 **IntelliSense**: Autocomplete for environment variable names
+* 🔧 **Flexible**: Supports `string`, `number`, `boolean`, and `enum`
+* 📝 **Error handling**: Throw or log warnings based on configuration
+* 🚀 **Zero dependencies**: Lightweight, focused, and portable
+
+> ⚠️ **Note:** This package is **Node-first**. Full type safety works in Node, Nest.js, and Express. For Next.js or browser environments, variables must be exposed via `NEXT_PUBLIC_*` and are **limited to strings**.
+
+---
 
 ## Installation
 
@@ -18,298 +25,246 @@ A TypeScript-first library for type-safe environment variable parsing and valida
 npm install env-typed-guard
 ```
 
+---
+
 ## Quick Start
 
-```typescript
+```ts
 import defineEnv from 'env-typed-guard';
 
-// Define your environment schema
 const env = defineEnv({
-  PORT: {
-    type: 'number' as const,
-    defaultValue: 3000
-  },
-  
+  PORT: { type: 'number', defaultValue: 3000 },
   NODE_ENV: {
-    type: 'enum' as const,
-    validValues: ['development', 'production', 'test'] as const,
-    defaultValue: 'development' as const
+    type: 'enum',
+    validValues: ['development', 'production', 'test'],
+    defaultValue: 'development'
   },
-  
-  DATABASE_URL: {
-    type: 'string' as const
-    // No defaultValue = required environment variable
-  },
-  
-  DEBUG: {
-    type: 'boolean' as const,
-    defaultValue: false
-  }
+  DATABASE_URL: { type: 'string' }, // Required
+  DEBUG: { type: 'boolean', defaultValue: false }
 });
 
-// Use with full type safety and IntelliSense
 console.log(`Server running on port ${env.PORT}`);
 console.log(`Environment: ${env.NODE_ENV}`);
 console.log(`Debug mode: ${env.DEBUG}`);
 ```
 
-## API Reference
+---
+
+## API
 
 ### `defineEnv(schema, config?)`
 
-The main function that parses and validates environment variables.
+Parses and validates environment variables based on a schema.
 
 #### Parameters
 
-- `schema`: Object defining your environment variables
-- `config`: Optional configuration object
+* `schema` – Object defining environment variables and their types.
+* `config` – Optional configuration:
 
-#### Schema Types
 
-Each environment variable in your schema can be defined as:
 
-```typescript
-{
-  type: 'string' | 'number' | 'boolean' | 'enum';
-  defaultValue?: any;           // Optional default value
-  validate?: (value) => boolean | string;  // Optional custom validation
-}
-```
+### Schema
 
-#### Configuration Options
+| Property       | Type                           | Required | Description                                                |         |       |                                      |
+| -------------- | ------------------------------ | -------- | ---------------------------------------------------------- | ------- | ----- | ------------------------------------ |
+| `type`         | `'string'`, `'number'`, `'boolean'`, `'enum'` | ✅ Yes | The type of the environment variable |
+| `defaultValue` | same as type                          | ❌ No     | Default value if the variable is not set                   |         |       |                                      |
+| `validate`     | `(value) => boolean \| string` | ❌ No     | Custom validation function; return `true` or error message |         |       |                                      |
+| `validValues`  | `string[]`                     | ❌ No*    | Required if `type` is `'enum'`; allowed values             |         |       |                                      |
 
-```typescript
-{
-  debugMode?: boolean;    // Enable debug logging
-  log?: 'error' | 'warn' | 'info' | 'debug';  // Log level
-  throw?: boolean;        // Whether to throw on validation errors (default: true)
-}
-```
+*Only required for `enum` type variables.
 
-## Type Support
+---
 
-### String Type
-```typescript
+### Configuration (`config`)
+
+| Option      | Type      | Default | Description                                                |
+| ----------- | --------- | ------- | ---------------------------------------------------------- |
+| `debugMode` | `boolean` | `false` | Enable debug logging of parsed environment variables       |
+| `throw`     | `boolean` | `true`  | Throw errors on validation failure (if `false`, logs only) |
+
+---
+
+
+## Types Supported
+
+### String
+
+```ts
 const env = defineEnv({
-  API_KEY: {
-    type: 'string' as const,
-    defaultValue: 'dev-key'
-  }
+  API_KEY: { type: 'string', defaultValue: 'dev-key' }
 });
 ```
 
-### Number Type
-```typescript
+### Number
+
+```ts
 const env = defineEnv({
-  PORT: {
-    type: 'number' as const,
-    defaultValue: 3000
-  }
+  PORT: { type: 'number', defaultValue: 3000 }
 });
-// Environment variable: PORT=8080 → parsed as number 8080
+// PORT=8080 → parsed as number 8080
 ```
 
-### Boolean Type
-```typescript
+### Boolean
+
+```ts
 const env = defineEnv({
-  DEBUG: {
-    type: 'boolean' as const,
-    defaultValue: false
-  }
+  DEBUG: { type: 'boolean', defaultValue: false }
 });
-// Environment variable: DEBUG=true → parsed as boolean true
 // Accepts: 'true', 'false', '1', '0' (case insensitive)
 ```
 
-### Enum Type
-```typescript
+### Enum
+
+```ts
 const env = defineEnv({
-  LOG_LEVEL: {
-    type: 'enum' as const,
-    validValues: ['debug', 'info', 'warn', 'error'] as const,
-    defaultValue: 'info' as const
+  LOG_LEVEL: { 
+    type: 'enum', 
+    validValues: ['debug', 'info', 'warn', 'error'], 
+    defaultValue: 'info' 
   }
 });
-// env.LOG_LEVEL has type: 'debug' | 'info' | 'warn' | 'error'
+// Type: 'debug' | 'info' | 'warn' | 'error'
 ```
+
+---
 
 ## Advanced Usage
 
 ### Custom Validation
 
-```typescript
+```ts
 const env = defineEnv({
   PASSWORD: {
-    type: 'string' as const,
-    validate: (value: string) => {
-      if (value.length < 8) {
-        return 'Password must be at least 8 characters';
-      }
-      if (!/[A-Z]/.test(value)) {
-        return 'Password must contain at least one uppercase letter';
-      }
-      return true;
-    }
+    type: 'string',
+    validate: (val) => val.length >= 8 || 'Password must be at least 8 chars'
   },
-  
   PORT: {
-    type: 'number' as const,
+    type: 'number',
     defaultValue: 3000,
-    validate: (value: number) => {
-      if (value < 1000 || value > 65535) {
-        return 'Port must be between 1000 and 65535';
-      }
-      return true;
-    }
+    validate: (val) => (val >= 1000 && val <= 65535) || 'Port must be 1000–65535'
   }
 });
 ```
 
-### Required vs Optional Variables
+### Optional vs Required Variables
 
-```typescript
+```ts
 const env = defineEnv({
-  // Required (no defaultValue)
-  DATABASE_URL: {
-    type: 'string' as const
-  },
-  
-  // Optional (has defaultValue)
-  CACHE_TTL: {
-    type: 'number' as const,
-    defaultValue: 300
-  }
+  DATABASE_URL: { type: 'string' },        // Required
+  CACHE_TTL: { type: 'number', defaultValue: 300 } // Optional
 });
 ```
 
-### Environment-specific Configuration
+### Node vs Client (Next.js)
 
-```typescript
-const env = defineEnv({
-  NODE_ENV: {
-    type: 'enum' as const,
-    validValues: ['development', 'production', 'test'] as const,
-    defaultValue: 'development' as const
-  },
-  
-  DATABASE_URL: {
-    type: 'string' as const,
-    defaultValue: process.env.NODE_ENV === 'development' 
-      ? 'sqlite://dev.db' 
-      : undefined // Required in production
+* **Node/Nest.js/Express:** Full types supported.
+* **Next.js client:** Only strings allowed; use `NEXT_PUBLIC_*` prefix:
+
+```ts
+const nextConfig = {
+  env: {
+    NEXT_PUBLIC_API_URL: env.API_URL, // string only
   }
-});
+};
 ```
 
-### Error Handling
+---
 
-```typescript
+## Error Handling
+
+```ts
 try {
-  const env = defineEnv({
-    REQUIRED_VAR: {
-      type: 'string' as const
-    }
-  });
-} catch (error) {
-  console.error('Environment validation failed:', error.message);
+  const env = defineEnv({ REQUIRED_VAR: { type: 'string' } });
+} catch (err) {
+  console.error('Env validation failed:', err.message);
   process.exit(1);
 }
 
 // Or disable throwing
-const env = defineEnv({
-  REQUIRED_VAR: {
-    type: 'string' as const
-  }
-}, {
-  throw: false,
-  log: 'warn'
-});
+const env = defineEnv({ REQUIRED_VAR: { type: 'string' } }, { throw: false });
 ```
 
-### Debug Mode
+---
 
-```typescript
+## Debug Mode
+
+```ts
 const env = defineEnv({
-  PORT: {
-    type: 'number' as const,
-    defaultValue: 3000
-  }
-}, {
-  debugMode: true
-});
+  PORT: { type: 'number', defaultValue: 3000 }
+}, { debugMode: true });
 
 // Output:
 // Environment variables:
 //   PORT=3000 (using default)
 ```
 
+---
+
 ## Best Practices
 
-1. **Use `as const` for type literals** to get better type inference:
-   ```typescript
-   type: 'string' as const  // ✅ Good
-   type: 'string'           // ❌ Less precise typing
-   ```
+1. Use `as const` for type literals:
 
-2. **Group related variables** in logical schemas:
-   ```typescript
-   const dbEnv = defineEnv({
-     DATABASE_URL: { type: 'string' as const },
-     DATABASE_POOL_SIZE: { type: 'number' as const, defaultValue: 10 }
-   });
-   ```
+```ts
+type: 'string' as const
+```
 
-3. **Validate early** in your application startup:
-   ```typescript
-   // At the top of your main file
-   const env = defineEnv(schema);
-   ```
+2. Validate early in your app startup:
 
-4. **Use meaningful validation messages**:
-   ```typescript
-   validate: (value) => value > 0 || 'Must be a positive number'
-   ```
+```ts
+const env = defineEnv(schema); // Top of main file
+```
 
-5. **Provide sensible defaults** for optional variables:
-   ```typescript
-   TIMEOUT: {
-     type: 'number' as const,
-     defaultValue: 5000  // 5 seconds
-   }
-   ```
+3. Use meaningful validation messages:
+
+```ts
+validate: (value) => value > 0 || 'Must be positive'
+```
+
+4. Provide defaults for optional vars:
+
+```ts
+TIMEOUT: { type: 'number', defaultValue: 5000 }
+```
+
+---
 
 ## Environment Variable Examples
 
-Set these in your shell or `.env` file:
-
 ```bash
-# String
-DATABASE_URL=postgresql://user:pass@localhost:5432/db
-
-# Number
+DATABASE_URL=postgres://user:pass@localhost:5432/db
 PORT=8080
-
-# Boolean
 DEBUG=true
-
-# Enum
 NODE_ENV=production
 ```
 
+---
+
 ## TypeScript Integration
 
-The library provides full TypeScript support with:
+* **Type inference** from schema
+* **IntelliSense** autocomplete
+* **Compile-time type checking**
+* **Clear error messages**
 
-- **Type inference**: Automatically infers types from your schema
-- **IntelliSense**: Autocomplete for environment variable names
-- **Type checking**: Compile-time validation of usage
-- **Error messages**: Clear TypeScript errors for invalid usage
+---
+
+## Tested Environments
+
+* ✅ Node.js
+* ✅ Nest.js
+* ✅ Express.js
+* 🟨 Next.js (server-side only, client limited to strings)
+
+---
 
 ## Contributing
 
-Contributions are welcome! Please feel free to submit issues and pull requests.
+Pull requests and issues welcome.
+
+---
 
 ## License
 
-MIT License - see LICENSE file for details.
+MIT
 
