@@ -1,14 +1,12 @@
+import logger from "./classes/logger";
 import { EnvConfigType, EnvSchemaType, InferEnvType } from "./types";
 import * as dotenv from "dotenv";
 
 // Load environment variables from .env file
-dotenv.config();
-/**
- * Node.js `process.env` type declaration (for TS compatibility)
- */
-declare const process: {
-    env: Record<string, string | undefined>;
-};
+dotenv.config({
+    quiet: true,
+    debug: false,
+});
 
 
 /**
@@ -26,19 +24,23 @@ function parseValue(
     value: string,
     type: string,
     variableName: string,
-    config: EnvConfigType
 ): any {
+    const fail = (msg: string) => {
+        throw new Error(msg);
+    };
+
     switch (type) {
         case "string":
+            if (value.length === 0) {
+                return fail(`Environment variable "${variableName}" cannot be an empty string`);
+            }
             return value;
 
         case "number":
             const num = Number(value);
             if (isNaN(num)) {
-                const msg = `Cannot parse "${value}" as number for ${variableName}`;
-                console.error(msg);
-                if (config.throw !== false) throw new Error(msg);
-                return undefined;
+                const msg = `Cannot parse "${value}" as number for "${variableName}"`;
+                return fail(msg);
             }
             return num;
 
@@ -47,13 +49,10 @@ function parseValue(
             if (["true", "1"].includes(lowerValue)) return true;
             if (["false", "0"].includes(lowerValue)) return false;
 
-            const msg = `Cannot parse "${value}" as boolean for ${variableName}. Expected: true, false, 1, or 0`;
-            console.error(msg);
-            if (config.throw !== false) throw new Error(msg);
-            return undefined;
+            return fail(`Cannot parse "${value}" as boolean for "${variableName}". Expected: true, false, 1, or 0`);
 
         default:
-            return value;
+            return fail(`Unknown type "${type}" for "${variableName}"`);
     }
 }
 
@@ -109,6 +108,7 @@ export default function defineEnv<T extends EnvSchemaType>(
                     const msg = `Environment variable "${key}" is required but not set`;
                     if (config.throw !== false) throw new Error(msg);
                     errors.push(msg);
+                    final[key] = undefined;
                     continue;
                 }
             }
@@ -122,12 +122,13 @@ export default function defineEnv<T extends EnvSchemaType>(
                     const msg = `Environment variable "${key}" must be one of: ${schemaValue.validValues.join(", ")}`;
                     if (config.throw !== false) throw new Error(msg);
                     errors.push(msg);
+                    final[key] = undefined;
                     continue;
                 }
                 final[key] = rawValue;
             } else {
                 // Handle string, number, or boolean
-                const parsed = parseValue(rawValue, schemaValue.type as string, key, config);
+                const parsed = parseValue(rawValue, schemaValue.type as string, key);
                 final[key] = parsed;
             }
 
@@ -138,36 +139,44 @@ export default function defineEnv<T extends EnvSchemaType>(
                     const msg = `Environment variable "${key}" failed validation`;
                     if (config.throw !== false) throw new Error(msg);
                     errors.push(msg);
+                    final[key] = undefined;
                     continue;
                 }
                 if (typeof validationResult === "string") {
                     const msg = `Environment variable "${key}" validation error: ${validationResult}`;
                     if (config.throw !== false) throw new Error(msg);
                     errors.push(msg);
+                    final[key] = undefined;
                     continue;
                 }
             }
-
             logEntries.push(`${key}=${final[key]}`);
         } catch (err) {
             const message =
                 err instanceof Error ? err.message : `Unknown error parsing "${key}"`;
             errors.push(message);
-            if (config.throw !== false) console.error(message);
+            if (config.throw !== false) throw err; // rethrow in strict mode
         }
-    }
-
-    // If there are accumulated errors
-    if (errors.length > 0) {
-        const msg = `Environment validation failed:\n${errors.join("\n")}`;
-        console.error(msg);
-        if (config.throw !== false) throw new Error(msg);
     }
 
     // Optional debug logging
     if (config.debugMode) {
-        console.log("Environment variables:", config);
-        logEntries.forEach(entry => console.log(`  ${entry}`));
+        logger.title().log();
+        logger.blue("Environment variables:").log();
+        logEntries.map(entry => logger.cyan(entry).log())
+        logger.newLine(1).log();
+    }
+
+    // If there are accumulated errors
+    if (errors.length > 0) {
+        const msg = `Environment validation failed:\n${errors
+            .map(e => `  • ${e}`)
+            .join("\n")}`;
+
+        if (config.throw !== false) throw new Error(msg);
+        else logger.red(msg).log();
+    } else if (config.debugMode) {
+        logger.green("✅ Environment validated successfully").log();
     }
 
     return final as InferEnvType<T>;
