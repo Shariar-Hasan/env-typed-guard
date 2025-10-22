@@ -1,5 +1,8 @@
 import { EnvConfigType, EnvSchemaType, InferEnvType } from "./types";
+import * as dotenv from "dotenv";
 
+// Load environment variables from .env file
+dotenv.config();
 /**
  * Node.js `process.env` type declaration (for TS compatibility)
  */
