@@ -8,6 +8,7 @@ dotenv.config({
     debug: false,
 });
 
+const errorPrefix = "[env-typed-guard] ";
 
 /**
  * Parses a raw environment variable value into the specified type.
@@ -32,15 +33,14 @@ function parseValue(
     switch (type) {
         case "string":
             if (value.length === 0) {
-                return fail(`Environment variable "${variableName}" cannot be an empty string`);
+                return fail(`${errorPrefix} Environment variable "${variableName}" cannot be an empty string`);
             }
             return value;
 
         case "number":
             const num = Number(value);
             if (isNaN(num)) {
-                const msg = `Cannot parse "${value}" as number for "${variableName}"`;
-                return fail(msg);
+                return fail(`${errorPrefix} Cannot parse "${value}" as number for "${variableName}"`);
             }
             return num;
 
@@ -49,10 +49,10 @@ function parseValue(
             if (["true", "1"].includes(lowerValue)) return true;
             if (["false", "0"].includes(lowerValue)) return false;
 
-            return fail(`Cannot parse "${value}" as boolean for "${variableName}". Expected: true, false, 1, or 0`);
+            return fail(`${errorPrefix} Cannot parse "${value}" as boolean for "${variableName}". Expected: true, false, 1, or 0`);
 
         default:
-            return fail(`Unknown type "${type}" for "${variableName}"`);
+            return fail(`${errorPrefix} Unknown type "${type}" for "${variableName}"`);
     }
 }
 
@@ -105,7 +105,7 @@ export default function defineEnv<T extends EnvSchemaType>(
                     logEntries.push(`${key}=${schemaValue.defaultValue} (using default)`);
                     continue;
                 } else {
-                    const msg = `Environment variable "${key}" is required but not set`;
+                    const msg = `${errorPrefix} Environment variable "${key}" is required but not set`;
                     if (config.throw !== false) throw new Error(msg);
                     errors.push(msg);
                     final[key] = undefined;
@@ -119,7 +119,7 @@ export default function defineEnv<T extends EnvSchemaType>(
                     throw new Error(`Enum "${key}" missing validValues`);
                 }
                 if (!schemaValue.validValues.includes(rawValue)) {
-                    const msg = `Environment variable "${key}" must be one of: ${schemaValue.validValues.join(", ")}`;
+                    const msg = `${errorPrefix} Environment variable "${key}" must be one of: ${schemaValue.validValues.join(", ")}`;
                     if (config.throw !== false) throw new Error(msg);
                     errors.push(msg);
                     final[key] = undefined;
@@ -136,14 +136,14 @@ export default function defineEnv<T extends EnvSchemaType>(
             if (schemaValue.validate) {
                 const validationResult = schemaValue.validate(final[key]);
                 if (validationResult === false) {
-                    const msg = `Environment variable "${key}" failed validation`;
+                    const msg = `${errorPrefix} Environment variable "${key}" failed validation`;
                     if (config.throw !== false) throw new Error(msg);
                     errors.push(msg);
                     final[key] = undefined;
                     continue;
                 }
                 if (typeof validationResult === "string") {
-                    const msg = `Environment variable "${key}" validation error: ${validationResult}`;
+                    const msg = `${errorPrefix} Environment variable "${key}" validation error: ${validationResult}`;
                     if (config.throw !== false) throw new Error(msg);
                     errors.push(msg);
                     final[key] = undefined;
