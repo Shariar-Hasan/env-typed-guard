@@ -65,12 +65,13 @@ Parses and validates environment variables based on a schema.
 
 ### Schema
 
-| Property       | Type                           | Required | Description                                                |
-| -------------- | ------------------------------ | -------- | ---------------------------------------------------------- | 
-| `type`         | `'string'`, `'number'`, `'boolean'`, `'enum'` | ✅ Yes | The type of the environment variable          |
-| `defaultValue` | same as type                          | ❌ No     | Default value if the variable is not set           | 
-| `validate`     | `(value) => boolean \| string` | ❌ No     | Custom validation function; return `true` or error message |  
-| `validValues`  | `string[]`                     | ❌ No*    | Required if `type` is `'enum'`; allowed values             |
+| Property       | Type                                    | Required | Description                                                |
+| -------------- | --------------------------------------- | -------- | ---------------------------------------------------------- |
+| `type`         | `'string'`, `'number'`, `'boolean'`, `'enum'` | ✅ Yes   | The type of the environment variable                       |
+| `defaultValue` | same as type                            | ❌ No    | Default value if the variable is not set                   |
+| `validate`     | `(value) => boolean \| string`           | ❌ No    | Custom validation function; return `true` or error message |
+| `validValues`  | `string[]`                              | ❌ No*   | Required if `type` is `'enum'`; allowed values             |
+
 
 *Only required for `enum` type variables.
 
