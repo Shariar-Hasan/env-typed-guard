@@ -159,7 +159,7 @@ const env = defineEnv({
 ### Node vs Client (Next.js)
 
 * **Node/Nest.js/Express:** Full types supported.
-* **Next.js client:** Only strings allowed; use `NEXT_PUBLIC_*` prefix:
+* **Next.js client:** Only strings allowed; use `NEXT_PUBLIC_*` prefix: (`Not recommended till now`)
 
 ```ts
 const nextConfig = {
