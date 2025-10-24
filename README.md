@@ -13,7 +13,7 @@ A **TypeScript-first library** for **type-safe environment variable parsing and 
 * 🎯 **IntelliSense**: Autocomplete for environment variable names
 * 🔧 **Flexible**: Supports `string`, `number`, `boolean`, and `enum`
 * 📝 **Error handling**: Throw or log warnings based on configuration
-* 🚀 **Zero dependencies**: Lightweight, focused, and portable
+* 🚀 **Almost Zero dependencies**: Lightweight, focused, and portable
 
 > ⚠️ **Note:** This package is **Node-first**. Full type safety works in Node, Nest.js, and Express. For Next.js or browser environments, variables must be exposed via `NEXT_PUBLIC_*` and are **limited to strings**.
 
