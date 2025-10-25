@@ -43,7 +43,7 @@ body:
     id: actual
     attributes:
       label: Actual Behavior
-      placeholder: Got a blank screen and error message “TypeError: undefined is not a function”
+      placeholder: 'Got a blank screen and error message "TypeError: undefined is not a function"'
     validations:
       required: true
 
