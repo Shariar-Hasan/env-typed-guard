@@ -19,15 +19,6 @@ body:
       required: true
 
   - type: textarea
-    id: problem
-    attributes:
-      label: Is your feature request related to a problem?
-      description: Explain what problem or limitation this feature will solve.
-      placeholder: It’s hard to read the UI at night — a dark mode would improve accessibility.
-    validations:
-      required: true
-
-  - type: textarea
     id: solution
     attributes:
       label: Describe the proposed solution
@@ -35,13 +26,6 @@ body:
       placeholder: Add a toggle button to switch between light and dark themes, saving the preference in localStorage.
     validations:
       required: true
-
-  - type: textarea
-    id: alternatives
-    attributes:
-      label: Alternatives Considered
-      description: Have you considered any alternatives or workarounds?
-      placeholder: Using browser extensions for dark mode, but not ideal.
 
   - type: textarea
     id: additional
