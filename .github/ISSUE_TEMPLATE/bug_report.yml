@@ -1,0 +1,90 @@
+name: 🐛 Bug Report
+description: Report a reproducible bug or unexpected behavior
+title: "[BUG]: "
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        ## 🐞 Bug Report
+        Please provide as much detail as possible to help us reproduce and fix the issue.
+
+  - type: input
+    id: summary
+    attributes:
+      label: Summary
+      description: Short summary of the issue (this will appear after “[BUG]:”)
+      placeholder: App crashes when clicking on login
+    validations:
+      required: true
+
+  - type: textarea
+    id: steps
+    attributes:
+      label: Steps to Reproduce
+      description: Step-by-step instructions to reproduce the bug
+      placeholder: |
+        1. Go to '...'
+        2. Click on '...'
+        3. Scroll down to '...'
+        4. See error
+    validations:
+      required: true
+
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected Behavior
+      placeholder: App should redirect to the dashboard
+    validations:
+      required: true
+
+  - type: textarea
+    id: actual
+    attributes:
+      label: Actual Behavior
+      placeholder: Got a blank screen and error message “TypeError: undefined is not a function”
+    validations:
+      required: true
+
+  - type: input
+    id: environment
+    attributes:
+      label: Environment
+      placeholder: OS, Browser, Node version, Framework version, etc.
+
+
+  - type: textarea
+    id: logs
+    attributes:
+      label: Relevant Logs / Screenshots
+      placeholder: Paste any error messages, stack traces, or screenshots here.
+
+  - type: dropdown
+    id: severity
+    attributes:
+      label: Severity
+      options:
+        - 🟢 Minor (doesn't block work)
+        - 🟡 Major (affects main feature)
+        - 🔴 Critical (blocks app or build)
+    validations:
+      required: true
+
+  - type: dropdown
+    id: self_assign
+    attributes:
+      label: Would you like to work on this issue?
+      description: Select “Yes” if you plan to implement this feature yourself.
+      options:
+        - "Yes, I’d like to work on this"
+        - "No, I’m just suggesting the idea"
+    validations:
+      required: true
+
+  - type: markdown
+    attributes:
+      value: |
+        ---
+        ✅ **Thanks for reporting!**W
+        We'll review and reproduce the issue as soon as possible.
