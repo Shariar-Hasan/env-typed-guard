@@ -53,12 +53,16 @@ body:
       label: Environment
       placeholder: OS, Browser, Node version, Framework version, etc.
 
-
   - type: textarea
     id: logs
     attributes:
       label: Relevant Logs / Screenshots
-      placeholder: Paste any error messages, stack traces, or screenshots here.
+      description: |
+        Paste logs or drag-and-drop multiple screenshots here — GitHub will automatically upload and embed them.
+      placeholder: |
+        Example:
+        - Error stack trace
+        - Screenshot of console output
 
   - type: dropdown
     id: severity
@@ -75,10 +79,10 @@ body:
     id: self_assign
     attributes:
       label: Would you like to work on this issue?
-      description: Select “Yes” if you plan to implement this feature yourself.
+      description: Select “Yes” if you plan to fix this bug yourself.
       options:
         - "Yes, I’d like to work on this"
-        - "No, I’m just suggesting the idea"
+        - "No, I’m just reporting the issue"
     validations:
       required: true
 
@@ -86,5 +90,6 @@ body:
     attributes:
       value: |
         ---
-        ✅ **Thanks for reporting!**W
+        ✅ **Thanks for reporting!**
         We'll review and reproduce the issue as soon as possible.
+        If you’d like to help fix it, please check the box above to self-assign.
