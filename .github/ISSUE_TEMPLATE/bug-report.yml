@@ -1,7 +1,7 @@
 name: 🐛 Bug Report
 description: Report a reproducible bug or unexpected behavior
 title: "[BUG]: "
-labels: ["bug"]
+labels: ["bug-fix"]
 body:
   - type: markdown
     attributes:
