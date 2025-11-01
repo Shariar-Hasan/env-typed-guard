@@ -268,7 +268,8 @@ describe('defineEnv', () => {
 
     describe('type inference', () => {
         it('should provide proper type inference for schema properties', () => {
-            const schema = {
+
+            const env = defineEnv({
                 STRING_VAR: {
                     type: 'string' as const,
                     defaultValue: 'test'
@@ -284,11 +285,9 @@ describe('defineEnv', () => {
                 ENUM_VAR: {
                     type: 'enum' as const,
                     defaultValue: 'dev' as const,
-                    validValues: ['dev', 'prod'] as const
+                    validValues: ['dev', 'prod']
                 }
-            } as const;
-
-            const env = defineEnv(schema);
+            } as const);
 
             // These should all be properly typed
             expect(typeof env.BOOL_VAR).toBe('boolean');
@@ -298,7 +297,7 @@ describe('defineEnv', () => {
         });
     });
 
-    // ...existing code...
+
     it('should handle invalid number parsing', () => {
         process.env.PORT = 'not-a-number';
 
@@ -332,7 +331,8 @@ describe('defineEnv', () => {
 
 describe('type inference', () => {
     it('should provide proper type inference for schema properties', () => {
-        const schema = {
+
+        const env = defineEnv({
             STRING_VAR: {
                 type: 'string' as const,
                 defaultValue: 'test'
@@ -350,14 +350,41 @@ describe('type inference', () => {
                 defaultValue: 'dev' as const,
                 validValues: ['dev', 'prod'] as const
             }
-        } as const;
-
-        const env = defineEnv(schema);
+        } as const);
 
         // These should all be properly typed
         expect(typeof env.STRING_VAR).toBe('string');
         expect(typeof env.NUMBER_VAR).toBe('number');
         expect(typeof env.BOOL_VAR).toBe('boolean');
         expect(['dev', 'prod']).toContain(env.ENUM_VAR);
+    });
+});
+
+describe('empty environment variables', () => {
+    it('should throw an error for empty string variables', () => {
+        process.env.TEST_STRING = '';
+
+        const schema: EnvSchemaType = {
+            TEST_STRING: {
+                type: 'string',
+            }
+        };
+
+        const env = defineEnv(schema, { debugMode: true, throw: false });
+        expect(env.TEST_STRING).toBeUndefined();
+    });
+
+    it('should not throw an error for empty string if defaultValue is provided', () => {
+        process.env.TEST_NUMBER = '';
+
+        const schema: EnvSchemaType = {
+            TEST_NUMBER: {
+                type: 'number',
+                defaultValue: 0
+            }
+        };
+
+        const env = defineEnv(schema, { debugMode: true, throw: false });
+        expect(env.TEST_NUMBER).toBe(0);
     });
 });

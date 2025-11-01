@@ -1,5 +1,5 @@
 import logger from "./classes/logger";
-import { EnvConfigType, EnvSchemaType, InferEnvType } from "./types";
+import { EnvConfigType, EnvSchemaType, EnvSchemaValueType, InferEnvType } from "./types";
 import * as dotenv from "dotenv";
 
 // Load environment variables from .env file
@@ -22,25 +22,25 @@ const errorPrefix = "[env-typed-guard] ";
  * @throws Will throw an error if parsing fails and `config.throw` is not explicitly set to `false`.
  */
 function parseValue(
-    value: string,
-    type: string,
-    variableName: string,
+    {
+        value,
+        key,
+        schemaValue,
+        config
+    }: { value: string; key: string; schemaValue: EnvSchemaValueType; config: EnvConfigType }
 ): any {
     const fail = (msg: string) => {
         throw new Error(msg);
     };
 
-    switch (type) {
+    switch (schemaValue.type) {
         case "string":
-            if (value.length === 0) {
-                return fail(`${errorPrefix} Environment variable "${variableName}" cannot be an empty string`);
-            }
             return value;
 
         case "number":
             const num = Number(value);
             if (isNaN(num)) {
-                return fail(`${errorPrefix} Cannot parse "${value}" as number for "${variableName}"`);
+                return fail(`${errorPrefix} Cannot parse "${value}" as number for "${key}".`);
             }
             return num;
 
@@ -49,10 +49,10 @@ function parseValue(
             if (["true", "1"].includes(lowerValue)) return true;
             if (["false", "0"].includes(lowerValue)) return false;
 
-            return fail(`${errorPrefix} Cannot parse "${value}" as boolean for "${variableName}". Expected: true, false, 1, or 0`);
+            return fail(`${errorPrefix} Cannot parse "${value}" as boolean for "${key}". Expected: true, false, 1, or 0`);
 
         default:
-            return fail(`${errorPrefix} Unknown type "${type}" for "${variableName}"`);
+            return fail(`${errorPrefix} Unknown type "${schemaValue.type}" for "${key}".`);
     }
 }
 
@@ -99,7 +99,7 @@ export default function defineEnv<T extends EnvSchemaType>(
 
         try {
             // Handle missing environment variable
-            if (rawValue === undefined) {
+            if (rawValue === undefined || rawValue.length === 0) {
                 if ("defaultValue" in schemaValue && schemaValue.defaultValue !== undefined) {
                     final[key] = schemaValue.defaultValue;
                     logEntries.push(`${key}=${schemaValue.defaultValue} (using default)`);
@@ -128,7 +128,7 @@ export default function defineEnv<T extends EnvSchemaType>(
                 final[key] = rawValue;
             } else {
                 // Handle string, number, or boolean
-                const parsed = parseValue(rawValue, schemaValue.type as string, key);
+                const parsed = parseValue({ value: rawValue, key, schemaValue, config });
                 final[key] = parsed;
             }
 
