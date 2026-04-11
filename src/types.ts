@@ -37,14 +37,27 @@ export type EnvConfigType = {
   debugMode?: boolean;
   /** Whether to throw an error on validation failure (default: true) */
   throw?: boolean;
+  /** 
+   * Optionally load .env file before parsing environment variables.
+   * If true, calls dotenv.config() before processing.
+   * Recommended to be false if dotenv is already loaded in your entry point.
+   * (default: false)
+   */
+  loadEnv?: boolean;
 };
 
 
 /**
- * Helper type to infer the return type from the schema
+ * Helper type to infer the return type from the schema.
+ * Maps each schema entry to its corresponding runtime type based on the 'type' field.
+ * 
+ * For enum types, resolves to the union of valid values.
+ * For primitive types, resolves to string | number | boolean accordingly.
  */
 export type InferEnvType<T extends EnvSchemaType> = {
-  [K in keyof T]: T[K] extends { type: 'string' }
+  [K in keyof T]: T[K] extends { type: 'enum'; validValues: readonly (infer V)[] }
+  ? V
+  : T[K] extends { type: 'string' }
   ? string
   : T[K] extends { type: 'number' }
   ? number

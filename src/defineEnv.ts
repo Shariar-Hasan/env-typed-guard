@@ -2,11 +2,22 @@ import logger from "./classes/logger";
 import { EnvConfigType, EnvSchemaType, EnvSchemaValueType, InferEnvType } from "./types";
 import * as dotenv from "dotenv";
 
-// Load environment variables from .env file
-dotenv.config({
-    quiet: true,
-    debug: false,
-});
+/**
+ * NOTE: This module does NOT automatically load .env files.
+ * Users should call dotenv.config() in their entry point if needed:
+ * 
+ * @example
+ * ```ts
+ * import * as dotenv from 'dotenv';
+ * dotenv.config();
+ * 
+ * import { defineEnv } from 'env-typed-guard';
+ * const env = defineEnv({ ... });
+ * ```
+ */
+// Environment variables should already be loaded by the consumer
+// or passed in via system environment. We do not load them here to
+// avoid unexpected side effects and maintain modularity.
 
 const errorPrefix = "[env-typed-guard] ";
 
@@ -57,39 +68,45 @@ function parseValue(
 }
 
 /**
- * Loads, validates, and parses environment variables based on a schema.
+ * Defines and validates environment variables based on a provided schema.
  * 
- * This function ensures that environment variables:
- * - Match their expected types (`string`, `number`, `boolean`, or `enum`)
- * - Respect default values if not provided
- * - Pass optional custom validators
- * - Optionally throw errors or only warn depending on configuration
+ * This function ensures that environment variables conform to expected types,
+ * have required values, pass custom validators, and respect default values.
  * 
  * @template T - The schema definition type
  * 
- * @param schema - The schema defining the expected environment variables
- * @param config - Optional configuration for logging and error handling
+ * @param schema - The schema defining expected environment variables and their types
+ * @param config - Optional configuration object for behavior customization:
+ *   - debugMode: Enable debug logging (default: false)
+ *   - throw: Throw errors on validation failure (default: true)
+ *   - loadEnv: Call dotenv.config() before parsing (default: false)
  * 
- * @returns The parsed environment object, typed based on the provided schema
+ * @returns The validated environment object, typed according to the schema
  * 
- * @throws Error if validation or parsing fails and `config.throw` is not set to `false`
+ * @throws Error if validation fails and config.throw is true
  * 
  * @example
  * ```ts
  * const env = defineEnv({
- *   NODE_ENV: { type: "enum", validValues: ["development", "production"], defaultValue: "development" },
- *   PORT: { type: "number", defaultValue: 3000 },
- *   DEBUG: { type: "boolean", defaultValue: false }
+ *   NODE_ENV: { type: 'enum', validValues: ['dev', 'prod'], defaultValue: 'dev' },
+ *   PORT: { type: 'number', defaultValue: 3000 },
+ *   DEBUG: { type: 'boolean', defaultValue: false },
+ *   API_KEY: { type: 'string' } // Required, no default
  * }, { debugMode: true });
- * 
- * console.log(env.PORT); // 3000
- * console.log(env.NODE_ENV); // "development"
  * ```
  */
 export default function defineEnv<T extends EnvSchemaType>(
     schema: T,
     config: EnvConfigType = {}
 ): InferEnvType<T> {
+    // Optionally load .env file if requested (default: false to avoid side effects)
+    if (config.loadEnv) {
+        dotenv.config({
+            quiet: true,
+            debug: false,
+        });
+    }
+
     const final: Record<string, any> = {};
     const errors: string[] = [];
     const logEntries: string[] = [];
@@ -97,66 +114,68 @@ export default function defineEnv<T extends EnvSchemaType>(
     for (const [key, schemaValue] of Object.entries(schema)) {
         const rawValue = process.env[key];
 
-        try {
-            // Handle missing environment variable
-            if (rawValue === undefined || rawValue.length === 0) {
-                if ("defaultValue" in schemaValue && schemaValue.defaultValue !== undefined) {
-                    final[key] = schemaValue.defaultValue;
-                    logEntries.push(`${key}=${schemaValue.defaultValue} (using default)`);
-                    continue;
-                } else {
-                    const msg = `${errorPrefix} Environment variable "${key}" is required but not set`;
-                    if (config.throw !== false) throw new Error(msg);
-                    errors.push(msg);
-                    final[key] = undefined;
-                    continue;
-                }
-            }
-
-            // Handle enum types
-            if (schemaValue.type === "enum") {
-                if (!("validValues" in schemaValue)) {
-                    throw new Error(`Enum "${key}" missing validValues`);
-                }
-                if (!schemaValue.validValues.includes(rawValue)) {
-                    const msg = `${errorPrefix} Environment variable "${key}" must be one of: ${schemaValue.validValues.join(", ")}`;
-                    if (config.throw !== false) throw new Error(msg);
-                    errors.push(msg);
-                    final[key] = undefined;
-                    continue;
-                }
-                final[key] = rawValue;
+        // Handle missing environment variable
+        if (rawValue === undefined || rawValue.length === 0) {
+            if ("defaultValue" in schemaValue && schemaValue.defaultValue !== undefined) {
+                final[key] = schemaValue.defaultValue;
+                logEntries.push(`${key}=${schemaValue.defaultValue} (using default)`);
+                continue;
             } else {
-                // Handle string, number, or boolean
+                const msg = `${errorPrefix} Environment variable "${key}" is required but not set`;
+                if (config.throw !== false) throw new Error(msg);
+                errors.push(msg);
+                final[key] = undefined;
+                continue;
+            }
+        }
+
+        // Handle enum types
+        if (schemaValue.type === "enum") {
+            if (!("validValues" in schemaValue)) {
+                const msg = `${errorPrefix} Enum "${key}" missing validValues`;
+                if (config.throw !== false) throw new Error(msg);
+                errors.push(msg);
+                continue;
+            }
+            if (!schemaValue.validValues.includes(rawValue)) {
+                const msg = `${errorPrefix} Environment variable "${key}" must be one of: ${schemaValue.validValues.join(", ")}`;
+                if (config.throw !== false) throw new Error(msg);
+                errors.push(msg);
+                final[key] = undefined;
+                continue;
+            }
+            final[key] = rawValue;
+        } else {
+            // Handle string, number, or boolean
+            try {
                 const parsed = parseValue({ value: rawValue, key, schemaValue, config });
                 final[key] = parsed;
+            } catch (err) {
+                const message = err instanceof Error ? err.message : `Unknown error parsing "${key}"`;
+                errors.push(message);
+                if (config.throw !== false) throw err;
             }
-
-            // Custom validator check
-            if (schemaValue.validate) {
-                const validationResult = schemaValue.validate(final[key]);
-                if (validationResult === false) {
-                    const msg = `${errorPrefix} Environment variable "${key}" failed validation`;
-                    if (config.throw !== false) throw new Error(msg);
-                    errors.push(msg);
-                    final[key] = undefined;
-                    continue;
-                }
-                if (typeof validationResult === "string") {
-                    const msg = `${errorPrefix} Environment variable "${key}" validation error: ${validationResult}`;
-                    if (config.throw !== false) throw new Error(msg);
-                    errors.push(msg);
-                    final[key] = undefined;
-                    continue;
-                }
-            }
-            logEntries.push(`${key}=${final[key]}`);
-        } catch (err) {
-            const message =
-                err instanceof Error ? err.message : `Unknown error parsing "${key}"`;
-            errors.push(message);
-            if (config.throw !== false) throw err; // rethrow in strict mode
         }
+
+        // Custom validator check
+        if (schemaValue.validate) {
+            const validationResult = schemaValue.validate(final[key]);
+            if (validationResult === false) {
+                const msg = `${errorPrefix} Environment variable "${key}" failed validation`;
+                if (config.throw !== false) throw new Error(msg);
+                errors.push(msg);
+                final[key] = undefined;
+                continue;
+            }
+            if (typeof validationResult === "string") {
+                const msg = `${errorPrefix} Environment variable "${key}" validation error: ${validationResult}`;
+                if (config.throw !== false) throw new Error(msg);
+                errors.push(msg);
+                final[key] = undefined;
+                continue;
+            }
+        }
+        logEntries.push(`${key}=${final[key]}`);
     }
 
     // Optional debug logging
