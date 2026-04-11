@@ -112,7 +112,9 @@ export function defineEnv<T extends EnvSchemaType>(
     const logEntries: string[] = [];
 
     for (const [key, schemaValue] of Object.entries(schema)) {
-        const rawValue = process.env[key];
+        const sourceKey = schemaValue.key ?? key;
+        const keyDisplay = sourceKey === key ? `"${key}"` : `"${sourceKey}" (mapped to "${key}")`;
+        const rawValue = process.env[sourceKey];
 
         // Handle missing environment variable
         if (rawValue === undefined || rawValue.length === 0) {
@@ -121,7 +123,7 @@ export function defineEnv<T extends EnvSchemaType>(
                 logEntries.push(`${key}=${schemaValue.defaultValue} (using default)`);
                 continue;
             } else {
-                const msg = `${errorPrefix} Environment variable "${key}" is required but not set`;
+                const msg = `${errorPrefix} Environment variable ${keyDisplay} is required but not set`;
                 if (config.throw !== false) throw new Error(msg);
                 errors.push(msg);
                 final[key] = undefined;
@@ -132,13 +134,13 @@ export function defineEnv<T extends EnvSchemaType>(
         // Handle enum types
         if (schemaValue.type === "enum") {
             if (!("validValues" in schemaValue)) {
-                const msg = `${errorPrefix} Enum "${key}" missing validValues`;
+                const msg = `${errorPrefix} Enum ${keyDisplay} missing validValues`;
                 if (config.throw !== false) throw new Error(msg);
                 errors.push(msg);
                 continue;
             }
             if (!schemaValue.validValues.includes(rawValue)) {
-                const msg = `${errorPrefix} Environment variable "${key}" must be one of: ${schemaValue.validValues.join(", ")}`;
+                const msg = `${errorPrefix} Environment variable ${keyDisplay} must be one of: ${schemaValue.validValues.join(", ")}`;
                 if (config.throw !== false) throw new Error(msg);
                 errors.push(msg);
                 final[key] = undefined;
@@ -148,10 +150,10 @@ export function defineEnv<T extends EnvSchemaType>(
         } else {
             // Handle string, number, or boolean
             try {
-                const parsed = parseValue({ value: rawValue, key, schemaValue, config });
+                const parsed = parseValue({ value: rawValue, key: sourceKey, schemaValue, config });
                 final[key] = parsed;
             } catch (err) {
-                const message = err instanceof Error ? err.message : `Unknown error parsing "${key}"`;
+                const message = err instanceof Error ? err.message : `Unknown error parsing "${sourceKey}"`;
                 errors.push(message);
                 if (config.throw !== false) throw err;
             }
@@ -175,7 +177,11 @@ export function defineEnv<T extends EnvSchemaType>(
                 continue;
             }
         }
-        logEntries.push(`${key}=${final[key]}`);
+        if (sourceKey === key) {
+            logEntries.push(`${key}=${final[key]}`);
+        } else {
+            logEntries.push(`${key}=${final[key]} (from ${sourceKey})`);
+        }
     }
 
     // Optional debug logging

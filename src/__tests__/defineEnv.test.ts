@@ -1,5 +1,5 @@
 
-import defineEnv from '../defineEnv';
+import { defineEnv } from '../defineEnv';
 import { EnvSchemaType } from '../types';
 
 describe('defineEnv', () => {
@@ -386,5 +386,34 @@ describe('empty environment variables', () => {
 
         const env = defineEnv(schema, { debugMode: true, throw: false });
         expect(env.TEST_NUMBER).toBe(0);
+    });
+});
+
+describe('schema key alias', () => {
+    it('should map schema key to a different source env key', () => {
+        process.env.NEXT_PUBLIC_ENV_KEY = 'frontend-value';
+
+        const env = defineEnv({
+            ENV_KEY: {
+                type: 'string' as const,
+                key: 'NEXT_PUBLIC_ENV_KEY'
+            }
+        });
+
+        expect(env.ENV_KEY).toBe('frontend-value');
+    });
+
+    it('should use default value when aliased source key is missing', () => {
+        delete process.env.NEXT_PUBLIC_ENV_KEY;
+
+        const env = defineEnv({
+            ENV_KEY: {
+                type: 'string' as const,
+                key: 'NEXT_PUBLIC_ENV_KEY',
+                defaultValue: 'fallback'
+            }
+        });
+
+        expect(env.ENV_KEY).toBe('fallback');
     });
 });

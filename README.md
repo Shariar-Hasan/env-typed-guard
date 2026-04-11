@@ -68,6 +68,7 @@ Parses and validates environment variables based on a schema.
 | Property       | Type                                    | Required | Description                                                |
 | -------------- | --------------------------------------- | -------- | ---------------------------------------------------------- |
 | `type`         | `'string'`, `'number'`, `'boolean'`, `'enum'` | ✅ Yes   | The type of the environment variable                       |
+| `key`          | `string`                                | ❌ No    | Source env variable name if different from schema key      |
 | `defaultValue` | same as type                            | ❌ No    | Default value if the variable is not set                   |
 | `validate`     | `(value) => boolean \| string`           | ❌ No    | Custom validation function; return `true` or error message |
 | `validValues`  | `string[]`                              | ❌ No*   | Required if `type` is `'enum'`; allowed values             |
@@ -155,6 +156,22 @@ const env = defineEnv({
   DATABASE_URL: { type: 'string' },        // Required
   CACHE_TTL: { type: 'number', defaultValue: 300 } // Optional
 });
+```
+
+### Alias a Source Env Key
+
+Use `key` when the actual environment variable name differs from your app-facing key.
+
+```ts
+const env = defineEnv({
+  ENV_KEY: {
+    type: 'string',
+    key: 'NEXT_PUBLIC_ENV_KEY'
+  }
+});
+
+// Reads process.env.NEXT_PUBLIC_ENV_KEY
+// Access in app as env.ENV_KEY
 ```
 
 ### Node vs Client (Next.js)

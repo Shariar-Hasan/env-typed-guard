@@ -7,6 +7,12 @@ export type ErrorType = "missing" | "invalid" | "validation" | "unknown";
 
 type BaseEnvSchema = {
   /**
+   * Optional source environment variable name.
+   * Useful when your app key differs from the actual process.env key,
+   * e.g. ENV_KEY -> NEXT_PUBLIC_ENV_KEY.
+   */
+  key?: string;
+  /**
    * The default value to use if the environment variable is not set.
   */
   defaultValue?: string | number | boolean;
