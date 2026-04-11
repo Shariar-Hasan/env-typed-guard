@@ -30,7 +30,7 @@ npm install env-typed-guard
 ## Quick Start
 
 ```ts
-import defineEnv from 'env-typed-guard';
+import { defineEnv } from 'env-typed-guard';
 
 const env = defineEnv({
   PORT: { type: 'number', defaultValue: 3000 },
@@ -68,6 +68,8 @@ Parses and validates environment variables based on a schema.
 | Property       | Type                                    | Required | Description                                                |
 | -------------- | --------------------------------------- | -------- | ---------------------------------------------------------- |
 | `type`         | `'string'`, `'number'`, `'boolean'`, `'enum'` | ✅ Yes   | The type of the environment variable                       |
+| `key`          | `string`                                | ❌ No    | Source env variable name if different from schema key      |
+| `isSecret`     | `boolean`                               | ❌ No    | Masks value in debug logs as `***********`                 |
 | `defaultValue` | same as type                            | ❌ No    | Default value if the variable is not set                   |
 | `validate`     | `(value) => boolean \| string`           | ❌ No    | Custom validation function; return `true` or error message |
 | `validValues`  | `string[]`                              | ❌ No*   | Required if `type` is `'enum'`; allowed values             |
@@ -132,6 +134,28 @@ const env = defineEnv({
 
 ## Advanced Usage
 
+### Built-in Presets
+
+You can use built-in presets for common schema fields.
+
+```ts
+import { defineEnv, presets } from 'env-typed-guard';
+
+const env = defineEnv({
+  NODE_ENV: presets.nodeEnv(),
+  PORT: presets.port(3000),
+  DEBUG: presets.boolean(false),
+  API_KEY: presets.secret(),
+});
+```
+
+Available presets:
+
+* `presets.nodeEnv(defaultValue?)` -> enum of `development | production | test`
+* `presets.port(defaultValue?)` -> number with built-in port range validation
+* `presets.boolean(defaultValue?)` -> boolean
+* `presets.secret(defaultValue?)` -> string with `isSecret: true`
+
 ### Custom Validation
 
 ```ts
@@ -155,6 +179,38 @@ const env = defineEnv({
   DATABASE_URL: { type: 'string' },        // Required
   CACHE_TTL: { type: 'number', defaultValue: 300 } // Optional
 });
+```
+
+### Alias a Source Env Key
+
+Use `key` when the actual environment variable name differs from your app-facing key.
+
+```ts
+const env = defineEnv({
+  ENV_KEY: {
+    type: 'string',
+    key: 'NEXT_PUBLIC_ENV_KEY'
+  }
+});
+
+// Reads process.env.NEXT_PUBLIC_ENV_KEY
+// Access in app as env.ENV_KEY
+```
+
+### Hide Secret Values in Debug Logs
+
+Set `isSecret: true` to mask values in terminal output when `debugMode` is enabled.
+
+```ts
+const env = defineEnv({
+  SECRET_TOKEN: {
+    type: 'string',
+    isSecret: true
+  }
+}, { debugMode: true });
+
+// Debug output:
+// SECRET_TOKEN=***********
 ```
 
 ### Node vs Client (Next.js)

@@ -7,6 +7,17 @@ export type ErrorType = "missing" | "invalid" | "validation" | "unknown";
 
 type BaseEnvSchema = {
   /**
+   * Optional source environment variable name.
+   * Useful when your app key differs from the actual process.env key,
+   * e.g. ENV_KEY -> NEXT_PUBLIC_ENV_KEY.
+   */
+  key?: string;
+  /**
+   * Hide this value in debug logs when debugMode is enabled.
+   * Logged value will be masked as ***********.
+   */
+  isSecret?: boolean;
+  /**
    * The default value to use if the environment variable is not set.
   */
   defaultValue?: string | number | boolean;
@@ -37,14 +48,27 @@ export type EnvConfigType = {
   debugMode?: boolean;
   /** Whether to throw an error on validation failure (default: true) */
   throw?: boolean;
+  /** 
+   * Optionally load .env file before parsing environment variables.
+   * If true, calls dotenv.config() before processing.
+   * Recommended to be false if dotenv is already loaded in your entry point.
+   * (default: false)
+   */
+  loadEnv?: boolean;
 };
 
 
 /**
- * Helper type to infer the return type from the schema
+ * Helper type to infer the return type from the schema.
+ * Maps each schema entry to its corresponding runtime type based on the 'type' field.
+ * 
+ * For enum types, resolves to the union of valid values.
+ * For primitive types, resolves to string | number | boolean accordingly.
  */
 export type InferEnvType<T extends EnvSchemaType> = {
-  [K in keyof T]: T[K] extends { type: 'string' }
+  [K in keyof T]: T[K] extends { type: 'enum'; validValues: readonly (infer V)[] }
+  ? V
+  : T[K] extends { type: 'string' }
   ? string
   : T[K] extends { type: 'number' }
   ? number
