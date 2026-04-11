@@ -69,6 +69,7 @@ Parses and validates environment variables based on a schema.
 | -------------- | --------------------------------------- | -------- | ---------------------------------------------------------- |
 | `type`         | `'string'`, `'number'`, `'boolean'`, `'enum'` | ✅ Yes   | The type of the environment variable                       |
 | `key`          | `string`                                | ❌ No    | Source env variable name if different from schema key      |
+| `isSecret`     | `boolean`                               | ❌ No    | Masks value in debug logs as `***********`                 |
 | `defaultValue` | same as type                            | ❌ No    | Default value if the variable is not set                   |
 | `validate`     | `(value) => boolean \| string`           | ❌ No    | Custom validation function; return `true` or error message |
 | `validValues`  | `string[]`                              | ❌ No*   | Required if `type` is `'enum'`; allowed values             |
@@ -172,6 +173,22 @@ const env = defineEnv({
 
 // Reads process.env.NEXT_PUBLIC_ENV_KEY
 // Access in app as env.ENV_KEY
+```
+
+### Hide Secret Values in Debug Logs
+
+Set `isSecret: true` to mask values in terminal output when `debugMode` is enabled.
+
+```ts
+const env = defineEnv({
+  SECRET_TOKEN: {
+    type: 'string',
+    isSecret: true
+  }
+}, { debugMode: true });
+
+// Debug output:
+// SECRET_TOKEN=***********
 ```
 
 ### Node vs Client (Next.js)

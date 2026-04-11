@@ -111,6 +111,11 @@ export function defineEnv<T extends EnvSchemaType>(
     const errors: string[] = [];
     const logEntries: string[] = [];
 
+    const formatLogValue = (schemaValue: EnvSchemaValueType, value: unknown): string => {
+        if (schemaValue.isSecret) return "***********";
+        return String(value);
+    };
+
     for (const [key, schemaValue] of Object.entries(schema)) {
         const sourceKey = schemaValue.key ?? key;
         const keyDisplay = sourceKey === key ? `"${key}"` : `"${sourceKey}" (mapped to "${key}")`;
@@ -120,7 +125,7 @@ export function defineEnv<T extends EnvSchemaType>(
         if (rawValue === undefined || rawValue.length === 0) {
             if ("defaultValue" in schemaValue && schemaValue.defaultValue !== undefined) {
                 final[key] = schemaValue.defaultValue;
-                logEntries.push(`${key}=${schemaValue.defaultValue} (using default)`);
+                logEntries.push(`${key}=${formatLogValue(schemaValue, schemaValue.defaultValue)} (using default)`);
                 continue;
             } else {
                 const msg = `${errorPrefix} Environment variable ${keyDisplay} is required but not set`;
@@ -178,9 +183,9 @@ export function defineEnv<T extends EnvSchemaType>(
             }
         }
         if (sourceKey === key) {
-            logEntries.push(`${key}=${final[key]}`);
+            logEntries.push(`${key}=${formatLogValue(schemaValue, final[key])}`);
         } else {
-            logEntries.push(`${key}=${final[key]} (from ${sourceKey})`);
+            logEntries.push(`${key}=${formatLogValue(schemaValue, final[key])} (from ${sourceKey})`);
         }
     }
 

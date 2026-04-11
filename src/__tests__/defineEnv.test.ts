@@ -417,3 +417,50 @@ describe('schema key alias', () => {
         expect(env.ENV_KEY).toBe('fallback');
     });
 });
+
+describe('secret masking in debug logs', () => {
+    it('should mask secret values in debug logs while returning real value', () => {
+        const capturedLogs: string[] = [];
+        const logSpy = jest.spyOn(console, 'log').mockImplementation((message: unknown) => {
+            capturedLogs.push(String(message));
+        });
+
+        process.env.SECRET_TOKEN = 'super-secret-token';
+
+        const env = defineEnv({
+            SECRET_TOKEN: {
+                type: 'string' as const,
+                isSecret: true
+            }
+        }, { debugMode: true });
+
+        expect(env.SECRET_TOKEN).toBe('super-secret-token');
+        expect(capturedLogs.some(log => log.includes('SECRET_TOKEN=***********'))).toBe(true);
+        expect(capturedLogs.some(log => log.includes('super-secret-token'))).toBe(false);
+
+        logSpy.mockRestore();
+    });
+
+    it('should mask default values for secret fields in debug logs', () => {
+        const capturedLogs: string[] = [];
+        const logSpy = jest.spyOn(console, 'log').mockImplementation((message: unknown) => {
+            capturedLogs.push(String(message));
+        });
+
+        delete process.env.SECRET_TOKEN;
+
+        const env = defineEnv({
+            SECRET_TOKEN: {
+                type: 'string' as const,
+                isSecret: true,
+                defaultValue: 'fallback-secret'
+            }
+        }, { debugMode: true });
+
+        expect(env.SECRET_TOKEN).toBe('fallback-secret');
+        expect(capturedLogs.some(log => log.includes('SECRET_TOKEN=*********** (using default)'))).toBe(true);
+        expect(capturedLogs.some(log => log.includes('fallback-secret'))).toBe(false);
+
+        logSpy.mockRestore();
+    });
+});

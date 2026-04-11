@@ -13,6 +13,11 @@ type BaseEnvSchema = {
    */
   key?: string;
   /**
+   * Hide this value in debug logs when debugMode is enabled.
+   * Logged value will be masked as ***********.
+   */
+  isSecret?: boolean;
+  /**
    * The default value to use if the environment variable is not set.
   */
   defaultValue?: string | number | boolean;
