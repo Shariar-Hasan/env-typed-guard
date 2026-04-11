@@ -95,7 +95,7 @@ function parseValue(
  * }, { debugMode: true });
  * ```
  */
-export default function defineEnv<T extends EnvSchemaType>(
+export function defineEnv<T extends EnvSchemaType>(
     schema: T,
     config: EnvConfigType = {}
 ): InferEnvType<T> {
