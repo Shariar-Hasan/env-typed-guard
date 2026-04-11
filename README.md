@@ -30,7 +30,7 @@ npm install env-typed-guard
 ## Quick Start
 
 ```ts
-import defineEnv from 'env-typed-guard';
+import { defineEnv } from 'env-typed-guard';
 
 const env = defineEnv({
   PORT: { type: 'number', defaultValue: 3000 },
