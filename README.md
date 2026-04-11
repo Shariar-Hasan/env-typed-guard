@@ -134,6 +134,28 @@ const env = defineEnv({
 
 ## Advanced Usage
 
+### Built-in Presets
+
+You can use built-in presets for common schema fields.
+
+```ts
+import { defineEnv, presets } from 'env-typed-guard';
+
+const env = defineEnv({
+  NODE_ENV: presets.nodeEnv(),
+  PORT: presets.port(3000),
+  DEBUG: presets.boolean(false),
+  API_KEY: presets.secret(),
+});
+```
+
+Available presets:
+
+* `presets.nodeEnv(defaultValue?)` -> enum of `development | production | test`
+* `presets.port(defaultValue?)` -> number with built-in port range validation
+* `presets.boolean(defaultValue?)` -> boolean
+* `presets.secret(defaultValue?)` -> string with `isSecret: true`
+
 ### Custom Validation
 
 ```ts

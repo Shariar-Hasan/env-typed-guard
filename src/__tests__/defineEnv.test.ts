@@ -1,5 +1,6 @@
 
 import { defineEnv } from '../defineEnv';
+import { presets } from '../presets';
 import { EnvSchemaType } from '../types';
 
 describe('defineEnv', () => {
@@ -460,6 +461,46 @@ describe('secret masking in debug logs', () => {
         expect(env.SECRET_TOKEN).toBe('fallback-secret');
         expect(capturedLogs.some(log => log.includes('SECRET_TOKEN=*********** (using default)'))).toBe(true);
         expect(capturedLogs.some(log => log.includes('fallback-secret'))).toBe(false);
+
+        logSpy.mockRestore();
+    });
+});
+
+describe('presets', () => {
+    it('should support preset-based schema definitions', () => {
+        process.env.NODE_ENV = 'production';
+        process.env.PORT = '8080';
+        process.env.DEBUG = 'true';
+        process.env.API_KEY = 'my-secret';
+
+        const env = defineEnv({
+            NODE_ENV: presets.nodeEnv(),
+            PORT: presets.port(3000),
+            DEBUG: presets.boolean(false),
+            API_KEY: presets.secret(),
+        });
+
+        expect(env.NODE_ENV).toBe('production');
+        expect(env.PORT).toBe(8080);
+        expect(env.DEBUG).toBe(true);
+        expect(env.API_KEY).toBe('my-secret');
+    });
+
+    it('should mask secret preset values in debug logs', () => {
+        const capturedLogs: string[] = [];
+        const logSpy = jest.spyOn(console, 'log').mockImplementation((message: unknown) => {
+            capturedLogs.push(String(message));
+        });
+
+        process.env.API_KEY = 'super-secret';
+
+        const env = defineEnv({
+            API_KEY: presets.secret(),
+        }, { debugMode: true });
+
+        expect(env.API_KEY).toBe('super-secret');
+        expect(capturedLogs.some(log => log.includes('API_KEY=***********'))).toBe(true);
+        expect(capturedLogs.some(log => log.includes('super-secret'))).toBe(false);
 
         logSpy.mockRestore();
     });
